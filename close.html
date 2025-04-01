@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            background-color: gray ;
+        }
+        input, button {
+            background-color: lightslategray;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <img src="./logo" alt="Logo">
+    <button id="button" onclick="closeServer()">Close server</button>
+    <button onclick="history.back()">Back</button>
+
+    <script>
+        async function closeServer() {
+            try {
+                const response = await fetch('/api/close', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: localStorage.getItem('lastAttemptedPIN') })
+                });
+                
+                const result = await response.text();
+
+                if (result === "Forbidden") {
+                    document.getElementById('button').innerHTML="<i>You're not logged in!</i>"
+                    document.getElementById('button').onclick=()=>{location.href='/'}
+                }
+            } catch (error) {
+                 document.getElementById('button').innerHTML="<i>Server closed</i>"
+                 document.getElementById('button').onclick=()=>{}
+            }
+        }
+    </script>
+
+</body>
+</html>

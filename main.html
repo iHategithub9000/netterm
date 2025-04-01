@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetTerm</title>
+  <style>body {
+  font-family: monospace;
+  background-color: black;
+  color: white;
+  margin: 0;
+  padding: 0;
+}
+
+.terminal {
+  width: 100%;
+  height: 100vh;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.output {
+  white-space: pre-wrap;
+}
+
+.input-line {
+  display: flex;
+  align-items: center;
+}
+
+.prompt {
+  color: #00ff00;
+}
+
+input {
+  background: transparent;
+  border: none;
+  color: white;
+  width: 100%;
+  outline: none;
+  font-size: 1em;
+  padding: 5px;
+}
+</style>
+</head>
+<body>
+  <div class="terminal" id="terminal">
+    <div class="output" id="output">
+      <div class="output-line">Welcome to NETterm!<br>Client commands: .close, .clear, .logout, .refresh, .cjs [js], .csjs [js], .style [css]<br>CTRL+0 to reset client</div>
+    </div>
+    <div class="input-line">
+      <span class="prompt">></span>
+      <input type="text" id="input" autofocus />
+    </div>
+  </div>
+  <script>
+    document.addEventListener("keydown", (event) => {
+        if (event.ctrlKey && event.key === "0" && !event.repeat) {
+            event.preventDefault();
+            if (confirm("Are you sure you want to reset the client? This will log you out and remove all customization.")) {
+                localStorage.clear();
+                location.href='/'
+            }
+        }
+    });
+
+    let customStyle = localStorage.getItem('customStyle');
+    let customYS = localStorage.getItem('customYavascript');
+    if (customStyle) {
+        const style = document.createElement('style');
+        style.textContent = customStyle;
+        document.head.appendChild(style);
+    }
+    if (customYS) {
+        eval(customYS)
+    }
+
+    document.getElementById('input').addEventListener('keydown', async function (event) {
+      if (event.key === 'Enter') {
+        const inputField = document.getElementById('input');
+        const command = inputField.value.trim();
+        const output = document.getElementById('output');
+
+        // Display the entered command
+        output.innerHTML += `<div class="input-line"><span class="prompt">></span> ${command}</div>`;
+
+        if (command.toLowerCase().startsWith("cd ")) {
+          output.innerHTML += `<div class="output-line">CD cannot be used.</div>`;
+        } else if (command.toLowerCase().startsWith("exit")) {
+          output.innerHTML += `<div class="output-line">EXIT cannot be used.</div>`;
+        } else if (command.toLowerCase() === ".clear") {
+          output.innerHTML = ``
+        } else if (command.toLowerCase() === ".close") {
+          location.href='/close'
+        } else if (command.toLowerCase().startsWith(".cjs ")) {
+          output.innerHTML += `<div class="output-line"><textarea class="shield" readonly style="resize: none; background-color: black; width: 170px; height: 42px; border: none; color: white;">${eval(command.replace(/^\.cjs /, "")).toString()}</textarea></div>`
+        } else if (command.toLowerCase().startsWith(".csjs ")) {
+          localStorage.setItem('customYavascript', command.replace(/^\.csjs /, ""))
+          output.innerHTML += `Added startup JS, use .refresh to see it in action.`
+        } else if (command.toLowerCase() === ".refresh") {
+          location.href='/'
+        } else if (command.toLowerCase().startsWith(".style ")) {
+          localStorage.setItem('customStyle',command.toLowerCase().replace(/^\.style /, ""))
+          output.innerHTML += `<div class="output-line">Use ".refresh" to apply CSS.</div>`;
+        } else if (command.toLowerCase() === ".style") {
+          localStorage.removeItem('customStyle')
+          output.innerHTML += `<div class="output-line">Use ".refresh" to apply CSS.</div>`;
+        } else if (command.toLowerCase() === ".logout") {
+          localStorage.removeItem('lastAttemptedPIN')
+          location.href='/'
+        } else {
+          try {
+            const response = await fetch('/api/run', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ command, key: localStorage.getItem('lastAttemptedPIN')})
+            });
+
+            const data = await response.json();
+
+            if (data.stdout) {
+              output.innerHTML += `<div class="output-line">${data.stdout}</div>`;
+            }
+            if (data.stderr) {
+              output.innerHTML += `<div class="output-line" style="color: orange;">${data.stderr}</div>`;
+            }
+          } catch (error) {
+            output.innerHTML += `<div class="output-line" style="color: red;">Fetch error: ${error.message}</div>`;
+          }
+        }
+
+        output.scrollTop = output.scrollHeight;
+
+        inputField.value = '';
+      }
+    });
+  </script>
+</body>
+</html>

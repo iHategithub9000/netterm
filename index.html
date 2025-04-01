@@ -1,0 +1,18 @@
+<script>
+fetch('/api/auth', {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ key: localStorage.getItem('lastAttemptedPIN') })
+})
+  .then(response => response.json())
+  .then(responseJson => {
+    if (responseJson.success) {
+      console.log("User is already logged in");
+      location.href = "/main";
+    } else {
+      console.log("User not logged in.");
+      location.href = "/log-in";
+    }
+  })
+  .catch(error => console.error('Error:', error));
+</script>
