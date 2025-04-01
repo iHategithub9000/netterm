@@ -1,7 +1,18 @@
+if (process.argv[2] == undefined || process.argv[3] == undefined ){
+    console.log("Bad parameters.")
+    console.log("Usage: node nterm <pin> <port> [IDontCareAboutErrorsAndSupport]")
+    process.exit(1)
+}   
+if(process.argv[4]==="IDontCareAboutErrorsAndSupport") {
+    console.log('IDontCareAboutErrorsAndSupport flag set, will not check version.')
+}
+
 const express = require("express");
+const key = process.argv[2]
+const v = require("./version.json").version;
+const fetch = require('node-fetch').default;
 const path = require("path");
 const { exec } = require("child_process");
-const key = process.argv[2] || "0000"
 const app = express();
 app.use(express.json());
 
@@ -96,4 +107,31 @@ app.use((req, res, next) => {
 });
 
 
-app.listen(process.argv[3] || 8181, () => console.log("NETterm running on port "+(process.argv[3] || 8181)+" with key "+key));
+fetch('https://raw.githubusercontent.com/iHategithub9000/netterm/refs/heads/main/version.json')
+  .then(response => response.json())
+  .then(data => {
+    if (v!=data.version && process.argv[4]=="IDontCareAboutErrorsAndSupport"){
+        console.log("You're still behind on updates though. Latest: "+data.version+", Installed: "+v )
+    }
+    if (v!=data.version && process.argv[4]!=="IDontCareAboutErrorsAndSupport"){
+        console.log('**********************************')
+        console.log("You're behind on updates!\n")
+        console.log("Installed version: "+v)
+        console.log("Latest version: "+data.version)
+        console.log("\nServer will start in 20 seconds\n")
+        console.log("To get rid of the wait, add")
+        console.log("'IDontCareAboutErrorsAndSupport'")
+        console.log("to the end of process.argv,")
+        console.log("or just update.")
+        console.log('**********************************')
+        setTimeout(()=>{
+            app.listen(process.argv[3], () => console.log("NETterm running on port "+(process.argv[3] || 8181)+" with key "+key));
+        },20000)
+    } else {
+        app.listen(process.argv[3], () => console.log("NETterm running on port "+(process.argv[3] || 8181)+" with key "+key));
+    }
+  })
+  .catch(err => {
+    console.error('Error: ', err);
+  });
+
