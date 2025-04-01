@@ -105,7 +105,10 @@ input {
           output.innerHTML += `<div class="output-line">Use ".refresh" to apply CSS.</div>`;
         } else if (command.toLowerCase() === ".style") {
           localStorage.removeItem('customStyle')
-          output.innerHTML += `<div class="output-line">Use ".refresh" to apply CSS.</div>`;
+          output.innerHTML += `<div class="output-line">Use ".refresh" to apply changes.</div>`;
+        } else if (command.toLowerCase() === ".csjs") {
+          localStorage.removeItem('customYavascript')
+          output.innerHTML += `<div class="output-line">Use ".refresh" to apply changes.</div>`;
         } else if (command.toLowerCase() === ".logout") {
           localStorage.removeItem('lastAttemptedPIN')
           location.href='/'
