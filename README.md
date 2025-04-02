@@ -8,7 +8,6 @@ git clone https://github.com/iHategithub9000/netterm.git
 cd netterm
 npm i
 node nterm <pin> <port>
-#default args: node nterm 0000 8181
 ```
 ## QnA
 1. The terminal keeps saying "Fetch error: Unexpected token 'F', "Forbidden" is not valid JSON"  
