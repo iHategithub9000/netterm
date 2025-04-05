@@ -100,16 +100,14 @@ input {
         return;
       }
       if (event.key === 'Enter') {
+        const inputField = document.getElementById('input');
+        const command = inputField.value.trim();
+        const output = document.getElementById('output');
         if (command) {
           commandHistory.push(command);
           localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
           historyIndex = commandHistory.length;
         }
-
-        const inputField = document.getElementById('input');
-        const command = inputField.value.trim();
-        const output = document.getElementById('output');
-
         output.innerHTML += `<div class="input-line"><span class="prompt">></span> ${command}</div>`;
 
         if (command.toLowerCase().startsWith("cd ")) {
