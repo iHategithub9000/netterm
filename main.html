@@ -55,10 +55,12 @@ input {
     </div>
   </div>
   <script>
+    let commandHistory = JSON.parse(localStorage.getItem('commandHistory')) || [];
+    let historyIndex = commandHistory.length;
     document.addEventListener("keydown", (event) => {
         if (event.ctrlKey && event.key === "0" && !event.repeat) {
             event.preventDefault();
-            if (confirm("Are you sure you want to reset the client? This will log you out and remove all customization.")) {
+            if (confirm("Are you sure you want to reset the client? This will log you out and remove all customization and command history.")) {
                 localStorage.clear();
                 location.href='/'
             }
@@ -77,12 +79,37 @@ input {
     }
 
     document.getElementById('input').addEventListener('keydown', async function (event) {
+      if (event.key === 'ArrowUp') {
+        if (historyIndex > 0) {
+          historyIndex--;
+          this.value = commandHistory[historyIndex] || '';
+        }
+        event.preventDefault();
+        return;
+      }
+
+      if (event.key === 'ArrowDown') {
+        if (historyIndex < commandHistory.length - 1) {
+          historyIndex++;
+          this.value = commandHistory[historyIndex] || '';
+        } else {
+          historyIndex = commandHistory.length;
+          this.value = '';
+        }
+        event.preventDefault();
+        return;
+      }
       if (event.key === 'Enter') {
+        if (command) {
+          commandHistory.push(command);
+          localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
+          historyIndex = commandHistory.length;
+        }
+
         const inputField = document.getElementById('input');
         const command = inputField.value.trim();
         const output = document.getElementById('output');
 
-        // Display the entered command
         output.innerHTML += `<div class="input-line"><span class="prompt">></span> ${command}</div>`;
 
         if (command.toLowerCase().startsWith("cd ")) {
@@ -112,6 +139,17 @@ input {
         } else if (command.toLowerCase() === ".logout") {
           localStorage.removeItem('lastAttemptedPIN')
           location.href='/'
+        } else if (command.toLowerCase() === ".history") {
+          if (commandHistory.length === 0) {
+            output.innerHTML += `<div class="output-line">No history available.</div>`;
+          } else {
+            output.innerHTML += `<div class="output-line">Command History:<br>${commandHistory.map((cmd, i) => `${i + 1}: ${cmd}`).join('<br>')}</div>`;
+          }
+        } else if (command.toLowerCase() === ".history clear") {
+          commandHistory = [];
+          historyIndex = 0;
+          localStorage.removeItem('commandHistory');
+          output.innerHTML += `<div class="output-line">Command history cleared.</div>`;
         } else {
           try {
             const response = await fetch('/api/run', {
